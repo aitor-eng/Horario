@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horario Escolar - 2º SMR</title>
+  <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #0f172a;
+      --subtext-color: #64748b;
+      --border-color: #e2e8f0;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      
+      /* Estilos para encabezados y recreos */
+      --header-bg: #1e293b;
+      --header-text: #ffffff;
+      --recreo-bg: #e2e8f0;
+      --recreo-text: #475569;
+      
+      /* Colores por profesor */
+      --c-marisol: #ec4899; /* Rosa */
+      --c-manolo: #06b6d4;  /* Cían */
+      --c-saul: #f59e0b;    /* Naranja */
+      --c-maria: #6366f1;   /* Violeta */
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --subtext-color: #94a3b8;
+      --border-color: #334155;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      
+      --header-bg: #0f172a;
+      --header-text: #38bdf8;
+      --recreo-bg: #334155;
+      --recreo-text: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s, opacity 0.3s, transform 0.2s;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 2rem 1rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6366f1, #0ea5e9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badges-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .course-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #6366f1, #0ea5e9);
+      color: #ffffff;
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 0.25rem 0.8rem;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);
+    }
+
+    .tutor-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.25rem 0.8rem;
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .tutor-badge strong {
+      color: var(--c-manolo);
+    }
+
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    button {
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 0.6rem 1.2rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      border-color: var(--subtext-color);
+    }
+
+    /* WIDGET EN TIEMPO REAL */
+    .status-widget {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(6, 182, 212, 0.08));
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.6rem;
+    }
+
+    .widget-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--subtext-color);
+    }
+
+    .live-clock {
+      font-family: monospace;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #0ea5e9;
+      background-color: var(--card-bg);
+      padding: 0.25rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .status-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 0.95rem;
+    }
+
+    .status-item .label {
+      font-weight: 800;
+      min-width: 130px;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.03em;
+    }
+
+    .status-item.current .label { color: #6366f1; }
+    .status-item.next .label { color: #f59e0b; }
+
+    .status-value {
+      font-weight: 700;
+      background-color: var(--card-bg);
+      padding: 0.4rem 0.9rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* BARRA DE PROFESORES */
+    .teachers-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      justify-content: center;
+    }
+
+    .teacher-badge {
+      position: relative;
+      background-color: var(--card-bg);
+      border: 2px solid var(--border-color);
+      padding: 0.6rem 1.2rem;
+      border-radius: 50px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .teacher-badge::before {
+      content: '';
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .prof-marisol::before { background-color: var(--c-marisol); }
+    .prof-manolo::before  { background-color: var(--c-manolo); }
+    .prof-saul::before    { background-color: var(--c-saul); }
+    .prof-maria::before   { background-color: var(--c-maria); }
+
+    /* TOOLTIP EN PROFESORES */
+    .teacher-badge .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      width: 250px;
+      background-color: var(--header-bg);
+      color: #fff;
+      text-align: left;
+      border-radius: 12px;
+      padding: 0.8rem 1rem;
+      position: absolute;
+      z-index: 100;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%) translateY(5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      font-size: 0.85rem;
+      font-weight: normal;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s, visibility 0.3s;
+    }
+
+    .teacher-badge .tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: var(--header-bg) transparent transparent transparent;
+    }
+
+    .teacher-badge:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .tooltip-title {
+      font-weight: 800;
+      margin-bottom: 0.4rem;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      padding-bottom: 0.3rem;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    .tooltip ul {
+      list-style-type: disc;
+      padding-left: 1.2rem;
+    }
+
+    /* TABLA DE HORARIO */
+    .table-container {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      overflow: visible;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 850px;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: center;
+      vertical-align: middle;
+      border-bottom: 1px solid var(--border-color);
+      border-right: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    th:last-child, td:last-child { border-right: none; }
+    tr:last-child td { border-bottom: none; }
+
+    th {
+      background-color: var(--header-bg);
+      color: var(--header-text);
+      font-size: 0.95rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .time-col {
+      width: 140px;
+      background-color: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .time-num {
+      font-size: 0.75rem;
+      display: block;
+      margin-top: 0.2rem;
+      font-weight: 700;
+      opacity: 0.85;
+    }
+
+    .recreo {
+      background-color: var(--recreo-bg);
+      color: var(--recreo-text);
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+    }
+
+    /* CELDAS DE ASIGNATURA */
+    .subject {
+      position: relative;
+      padding: 0.8rem 0.5rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      min-height: 60px;
+      cursor: pointer;
+    }
+
+    td[rowspan="2"] .subject {
+      min-height: 130px;
+    }
+
+    .prof-tag {
+      font-size: 0.75rem;
+      font-weight: 500;
+      opacity: 0.85;
+      margin-top: 0.25rem;
+    }
+
+    /* TOOLTIP / TARJETA FLOTANTE DE LA ASIGNATURA */
+    .subject .sub-tooltip {
+      visibility: hidden;
+      opacity: 0;
+      width: clamp(220px, 20vw, 280px);
+      background-color: #0f172a;
+      color: #ffffff;
+      text-align: left;
+      border-radius: 10px;
+      padding: 0.8rem 0.9rem;
+      position: absolute;
+      z-index: 9999;
+      bottom: 115%;
+      left: 50%;
+      transform: translateX(-50%) translateY(5px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+      font-size: 0.82rem;
+      font-weight: 400;
+      line-height: 1.45;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+      white-space: normal;
+      word-wrap: break-word;
+    }
+
+    .subject .sub-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: #0f172a transparent transparent transparent;
+    }
+
+    .subject:hover .sub-tooltip {
+      visibility: visible;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* AJUSTES PARA PRIMERA HORA */
+    tr:nth-child(1) .subject .sub-tooltip {
+      bottom: auto;
+      top: 115%;
+    }
+
+    tr:nth-child(1) .subject .sub-tooltip::after {
+      top: auto;
+      bottom: 100%;
+      border-color: transparent transparent #0f172a transparent;
+    }
+
+    /* AJUSTE PARA LUNES Y VIERNES */
+    td:nth-child(2) .subject .sub-tooltip {
+      left: 0%;
+      transform: translateX(0) translateY(5px);
+    }
+    td:nth-child(2) .subject:hover .sub-tooltip {
+      transform: translateX(0) translateY(0);
+    }
+    td:nth-child(2) .subject .sub-tooltip::after {
+      left: 25px;
+    }
+
+    td:nth-child(6) .subject .sub-tooltip {
+      left: auto;
+      right: 0%;
+      transform: translateX(0) translateY(5px);
+    }
+    td:nth-child(6) .subject:hover .sub-tooltip {
+      transform: translateX(0) translateY(0);
+    }
+    td:nth-child(6) .subject .sub-tooltip::after {
+      left: auto;
+      right: 25px;
+    }
+
+    /* ESTILOS POR PROFESOR */
+    .p-marisol { background-color: rgba(236, 72, 153, 0.15); color: var(--c-marisol); border-left: 4px solid var(--c-marisol); }
+    .p-manolo  { background-color: rgba(6, 182, 212, 0.15); color: var(--c-manolo); border-left: 4px solid var(--c-manolo); }
+    .p-saul    { background-color: rgba(245, 158, 11, 0.15); color: var(--c-saul); border-left: 4px solid var(--c-saul); }
+    .p-maria   { background-color: rgba(99, 102, 241, 0.15); color: var(--c-maria); border-left: 4px solid var(--c-maria); }
+
+    /* EFECTOS DE DESTACADO */
+    body.highlighting .subject:not(.active-highlight) {
+      opacity: 0.15;
+    }
+
+    body.highlighting .subject.active-highlight {
+      transform: scale(1.04);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      z-index: 5;
+    }
+
+    @media print {
+      body { background-color: white; color: black; padding: 0; }
+      .controls, .teachers-bar, .status-widget { display: none; }
+      .table-container { box-shadow: none; border: 1px solid #ccc; }
+      .subject .sub-tooltip { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="title-group">
+        <h1>Horario Escolar</h1>
+        <div class="badges-row">
+          <span class="course-badge">Curso 2º SMR</span>
+          <span class="tutor-badge">👨‍🏫 Tutor: <strong>Manolo</strong></span>
+        </div>
+      </div>
+      <div class="controls">
+        <button onclick="toggleTheme()">Modos Claro/Oscuro</button>
+        <button onclick="window.print()">Imprimir</button>
+      </div>
+    </header>
+
+    <!-- Widget Estado en Tiempo Real -->
+    <div class="status-widget">
+      <div class="widget-header">
+        <span class="widget-title">⏱️ Estado del Horario en Tiempo Real</span>
+        <span id="live-clock" class="live-clock">--:--:--</span>
+      </div>
+      <div class="status-row">
+        <div class="status-item current">
+          <span class="label">Clase Actual:</span>
+          <div id="current-class" class="status-value">Cargando...</div>
+        </div>
+        <div class="status-item next">
+          <span class="label">Próxima Clase:</span>
+          <div id="next-class" class="status-value">Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de Leyenda de Profesores -->
+    <div class="teachers-bar">
+      <div class="teacher-badge prof-marisol" onmouseenter="highlightProf('p-marisol')" onmouseleave="clearHighlight()">
+        Marisol
+        <div class="tooltip">
+          <div class="tooltip-title">Asignaturas de Marisol:</div>
+          <ul>
+            <li>Programación</li>
+            <li>Aplicación Web</li>
+            <li>Digitalización</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="teacher-badge prof-manolo" onmouseenter="highlightProf('p-manolo')" onmouseleave="clearHighlight()">
+        Manolo (Tutor)
+        <div class="tooltip">
+          <div class="tooltip-title">Asignaturas de Manolo:</div>
+          <ul>
+            <li>IPE II</li>
+            <li>Sistemas Operativos / SOR</li>
+            <li>Sostenibilidad</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="teacher-badge prof-saul" onmouseenter="highlightProf('p-saul')" onmouseleave="clearHighlight()">
+        Saúl
+        <div class="tooltip">
+          <div class="tooltip-title">Asignaturas de Saúl:</div>
+          <ul>
+            <li>Servicios en Red</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="teacher-badge prof-maria" onmouseenter="highlightProf('p-maria')" onmouseleave="clearHighlight()">
+        María
+        <div class="tooltip">
+          <div class="tooltip-title">Asignaturas de María:</div>
+          <ul>
+            <li>Montaje y Mantenimiento</li>
+            <li>Proyecto Intermodular</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de Horario -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Tramo</th>
+            <th>Lunes</th>
+            <th>Martes</th>
+            <th>Miércoles</th>
+            <th>Jueves</th>
+            <th>Viernes</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- 1ª HORA -->
+          <tr>
+            <td class="time-col">8:30 - 9:25 <span class="time-num">1ª HORA</span></td>
+            
+            <td rowspan="2">
+              <div class="subject p-maria">
+                Montaje y Mantenimiento
+                <span class="prof-tag">María</span>
+                <div class="sub-tooltip"><strong>Montaje y Mantenimiento:</strong> Ensamblaje de componentes informáticos, prevención de averías e instalación de hardware.</div>
+              </div>
+            </td>
+
+            <td rowspan="2">
+              <div class="subject p-manolo">
+                SOR / Sistema Operativo
+                <span class="prof-tag">Manolo (2 HORAS)</span>
+                <div class="sub-tooltip"><strong>SOR / Sistema Operativo:</strong> Configuración, optimización e instalación de sistemas de red y escritorios.</div>
+              </div>
+            </td>
+
+            <td rowspan="2">
+              <div class="subject p-maria">
+                Montaje y Mantenimiento
+                <span class="prof-tag">María</span>
+                <div class="sub-tooltip"><strong>Montaje y Mantenimiento:</strong> Prácticas de diagnóstico de averías e integración de periféricos.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-marisol">
+                Digitalización
+                <span class="prof-tag">Marisol</span>
+                <div class="sub-tooltip"><strong>Digitalización:</strong> Herramientas digitales, transformación tecnológica e industria 4.0.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-marisol">
+                Aplicación Web
+                <span class="prof-tag">Marisol</span>
+                <div class="sub-tooltip"><strong>Aplicación Web:</strong> Diseño e implementación de interfaces web interactivas con CSS/JS.</div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- 2ª HORA -->
+          <tr>
+            <td class="time-col">9:25 - 10:20 <span class="time-num">2ª HORA</span></td>
+
+            <td>
+              <div class="subject p-manolo">
+                Sistema Operativo
+                <span class="prof-tag">Manolo</span>
+                <div class="sub-tooltip"><strong>Sistema Operativo:</strong> Gestión de usuarios, administración de memoria y comandos.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-manolo">
+                SOR / Sostenibilidad
+                <span class="prof-tag">Manolo</span>
+                <div class="sub-tooltip"><strong>SOR / Sostenibilidad:</strong> Eficiencia energética en sistemas informáticos y gestión ecológica de residuos.</div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- RECREO 1 -->
+          <tr>
+            <td class="time-col">10:20 - 10:40</td>
+            <td colspan="5" class="recreo">R E C R E O</td>
+          </tr>
+
+          <!-- 3ª HORA -->
+          <tr>
+            <td class="time-col">10:40 - 11:35 <span class="time-num">3ª HORA</span></td>
+
+            <td>
+              <div class="subject p-marisol">
+                Programación
+                <span class="prof-tag">Marisol</span>
+                <div class="sub-tooltip"><strong>Programación:</strong> Fundamentos de lógica, estructuras de datos y algoritmos.</div>
+              </div>
+            </td>
+
+            <td rowspan="2">
+              <div class="subject p-saul">
+                Servicios en Red
+                <span class="prof-tag">Saúl</span>
+                <div class="sub-tooltip"><strong>Servicios en Red:</strong> Configuración de DNS, DHCP, servidores web y transferencia de datos.</div>
+              </div>
+            </td>
+
+            <td rowspan="2">
+              <div class="subject p-marisol">
+                Aplicación Web
+                <span class="prof-tag">Marisol</span>
+                <div class="sub-tooltip"><strong>Aplicación Web:</strong> Desarrollo práctico e integración de proyectos dinámicos en el servidor.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-manolo">
+                IPE
+                <span class="prof-tag">Manolo</span>
+                <div class="sub-tooltip"><strong>IPE:</strong> Itinerario Personal para la Empleabilidad y orientación laboral profesional.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-manolo">
+                Sistema Operativo
+                <span class="prof-tag">Manolo</span>
+                <div class="sub-tooltip"><strong>Sistema Operativo:</strong> Prácticas de virtualización y automatización de tareas.</div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- 4ª HORA -->
+          <tr>
+            <td class="time-col">11:35 - 12:30 <span class="time-num">4ª HORA</span></td>
+
+            <td>
+              <div class="subject p-manolo">
+                Sistema Operativo en Red
+                <span class="prof-tag">Manolo</span>
+                <div class="sub-tooltip"><strong>Sistema Operativo en Red:</strong> Administración de dominios, permisos y políticas de red.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-saul">
+                Servicio en Red
+                <span class="prof-tag">Saúl</span>
+                <div class="sub-tooltip"><strong>Servicios en Red:</strong> Diagnóstico de protocolos de comunicación y enrutamiento.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-maria">
+                Montaje y Mantenimiento
+                <span class="prof-tag">María</span>
+                <div class="sub-tooltip"><strong>Montaje y Mantenimiento:</strong> Reparación de hardware y optimización de equipos.</div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- RECREO 2 -->
+          <tr>
+            <td class="time-col">12:30 - 12:40</td>
+            <td colspan="5" class="recreo">R E C R E O</td>
+          </tr>
+
+          <!-- 5ª HORA -->
+          <tr>
+            <td class="time-col">12:40 - 13:35 <span class="time-num">5ª HORA</span></td>
+
+            <td>
+              <div class="subject p-manolo">
+                IPE II
+                <span class="prof-tag">Manolo</span>
+                <div class="sub-tooltip"><strong>IPE II:</strong> Creación de iniciativas empresariales, marco legal y fomento del emprendimiento.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-marisol">
+                Aplicación Web
+                <span class="prof-tag">Marisol</span>
+                <div class="sub-tooltip"><strong>Aplicación Web:</strong> Despliegue e integración de bases de datos en entornos web.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-manolo">
+                Sistema Operativo
+                <span class="prof-tag">Manolo</span>
+                <div class="sub-tooltip"><strong>Sistema Operativo:</strong> Seguridad, copia de seguridad y gestión de discos.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-maria">
+                Montaje y Mantenimiento
+                <span class="prof-tag">María</span>
+                <div class="sub-tooltip"><strong>Montaje y Mantenimiento:</strong> Mantenimiento preventivo y arquitectura de hardware.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-saul">
+                Servicio en Red
+                <span class="prof-tag">Saúl</span>
+                <div class="sub-tooltip"><strong>Servicios en Red:</strong> Seguridad en servicios de red y configuración de cortafuegos.</div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- 6ª HORA -->
+          <tr>
+            <td class="time-col">13:35 - 14:30 <span class="time-num">6ª HORA</span></td>
+
+            <td>
+              <div class="subject p-saul">
+                Servicio Red
+                <span class="prof-tag">Saúl</span>
+                <div class="sub-tooltip"><strong>Servicios en Red:</strong> Prácticas finales de resolución de incidencias en redes de comunicaciones.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-maria">
+                Proyecto Intermodular
+                <span class="prof-tag">María</span>
+                <div class="sub-tooltip"><strong>Proyecto Intermodular:</strong> Desarrollo e integración práctica del proyecto final combinando módulos.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-manolo">
+                Sostenibilidad
+                <span class="prof-tag">Manolo</span>
+                <div class="sub-tooltip"><strong>Sostenibilidad:</strong> Criterios de eficiencia tecnológica, reciclaje y responsabilidad ambiental.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-marisol">
+                Programación
+                <span class="prof-tag">Marisol</span>
+                <div class="sub-tooltip"><strong>Programación:</strong> Depuración de código, pruebas y desarrollo sintáctico.</div>
+              </div>
+            </td>
+
+            <td>
+              <div class="subject p-saul">
+                Servicio en Red
+                <span class="prof-tag">Saúl</span>
+                <div class="sub-tooltip"><strong>Servicios en Red:</strong> Revisión de configuraciones de red y prácticas avanzadas.</div>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const currentTheme = document.body.getAttribute('data-theme');
+      if (currentTheme === 'dark') {
+        document.body.removeAttribute('data-theme');
+      } else {
+        document.body.setAttribute('data-theme', 'dark');
+      }
+    }
+
+    function highlightProf(profClass) {
+      document.body.classList.add('highlighting');
+      document.querySelectorAll('.' + profClass).forEach(el => {
+        el.classList.add('active-highlight');
+      });
+    }
+
+    function clearHighlight() {
+      document.body.classList.remove('highlighting');
+      document.querySelectorAll('.active-highlight').forEach(el => {
+        el.classList.remove('active-highlight');
+      });
+    }
+
+    // MAPA DE HORARIOS (1=Lunes, 2=Martes, ..., 5=Viernes)
+    const scheduleData = {
+      1: [ // Lunes
+        { start: "08:30", end: "09:25", name: "Montaje y Mantenimiento", prof: "María" },
+        { start: "09:25", end: "10:20", name: "Montaje y Mantenimiento", prof: "María" },
+        { start: "10:20", end: "10:40", name: "☕ RECREO", prof: "" },
+        { start: "10:40", end: "11:35", name: "Programación", prof: "Marisol" },
+        { start: "11:35", end: "12:30", name: "Sistema Operativo en Red", prof: "Manolo" },
+        { start: "12:30", end: "12:40", name: "☕ RECREO", prof: "" },
+        { start: "12:40", end: "13:35", name: "IPE II", prof: "Manolo" },
+        { start: "13:35", end: "14:30", name: "Servicios en Red", prof: "Saúl" }
+      ],
+      2: [ // Martes
+        { start: "08:30", end: "09:25", name: "SOR / Sistema Operativo", prof: "Manolo" },
+        { start: "09:25", end: "10:20", name: "SOR / Sistema Operativo", prof: "Manolo" },
+        { start: "10:20", end: "10:40", name: "☕ RECREO", prof: "" },
+        { start: "10:40", end: "11:35", name: "Servicios en Red", prof: "Saúl" },
+        { start: "11:35", end: "12:30", name: "Servicios en Red", prof: "Saúl" },
+        { start: "12:30", end: "12:40", name: "☕ RECREO", prof: "" },
+        { start: "12:40", end: "13:35", name: "Aplicación Web", prof: "Marisol" },
+        { start: "13:35", end: "14:30", name: "Proyecto Intermodular", prof: "María" }
+      ],
+      3: [ // Miércoles
+        { start: "08:30", end: "09:25", name: "Montaje y Mantenimiento", prof: "María" },
+        { start: "09:25", end: "10:20", name: "Montaje y Mantenimiento", prof: "María" },
+        { start: "10:20", end: "10:40", name: "☕ RECREO", prof: "" },
+        { start: "10:40", end: "11:35", name: "Aplicación Web", prof: "Marisol" },
+        { start: "11:35", end: "12:30", name: "Aplicación Web", prof: "Marisol" },
+        { start: "12:30", end: "12:40", name: "☕ RECREO", prof: "" },
+        { start: "12:40", end: "13:35", name: "Sistema Operativo", prof: "Manolo" },
+        { start: "13:35", end: "14:30", name: "Sostenibilidad", prof: "Manolo" }
+      ],
+      4: [ // Jueves
+        { start: "08:30", end: "09:25", name: "Digitalización", prof: "Marisol" },
+        { start: "09:25", end: "10:20", name: "Sistema Operativo", prof: "Manolo" },
+        { start: "10:20", end: "10:40", name: "☕ RECREO", prof: "" },
+        { start: "10:40", end: "11:35", name: "IPE", prof: "Manolo" },
+        { start: "11:35", end: "12:30", name: "Servicios en Red", prof: "Saúl" },
+        { start: "12:30", end: "12:40", name: "☕ RECREO", prof: "" },
+        { start: "12:40", end: "13:35", name: "Montaje y Mantenimiento", prof: "María" },
+        { start: "13:35", end: "14:30", name: "Programación", prof: "Marisol" }
+      ],
+      5: [ // Viernes
+        { start: "08:30", end: "09:25", name: "Aplicación Web", prof: "Marisol" },
+        { start: "09:25", end: "10:20", name: "SOR / Sostenibilidad", prof: "Manolo" },
+        { start: "10:20", end: "10:40", name: "☕ RECREO", prof: "" },
+        { start: "10:40", end: "11:35", name: "Sistema Operativo", prof: "Manolo" },
+        { start: "11:35", end: "12:30", name: "Montaje y Mantenimiento", prof: "María" },
+        { start: "12:30", end: "12:40", name: "☕ RECREO", prof: "" },
+        { start: "12:40", end: "13:35", name: "Servicios en Red", prof: "Saúl" },
+        { start: "13:35", end: "14:30", name: "Servicios en Red", prof: "Saúl" }
+      ]
+    };
+
+    function updateLiveStatus() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timeString = `${hours}:${minutes}:${seconds}`;
+      
+      document.getElementById('live-clock').innerText = timeString;
+
+      const currentDay = now.getDay(); // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
+      const currentMinutesTotal = now.getHours() * 60 + now.getMinutes();
+
+      const currentClassEl = document.getElementById('current-class');
+      const nextClassEl = document.getElementById('next-class');
+
+      if (currentDay === 0 || currentDay === 6) {
+        currentClassEl.innerHTML = "🌴 Fin de semana (Sin clases)";
+        nextClassEl.innerHTML = "📅 Próxima clase: Lunes a las 08:30 (Montaje y Mantenimiento - María)";
+        return;
+      }
+
+      const todaySchedule = scheduleData[currentDay];
+      if (!todaySchedule) return;
+
+      let currentSlot = null;
+      let nextSlot = null;
+
+      for (let i = 0; i < todaySchedule.length; i++) {
+        const slot = todaySchedule[i];
+        const [startH, startM] = slot.start.split(':').map(Number);
+        const [endH, endM] = slot.end.split(':').map(Number);
+
+        const startTotal = startH * 60 + startM;
+        const endTotal = endH * 60 + endM;
+
+        if (currentMinutesTotal >= startTotal && currentMinutesTotal < endTotal) {
+          currentSlot = slot;
+          nextSlot = todaySchedule[i + 1] || null;
+          break;
+        } else if (currentMinutesTotal < startTotal) {
+          nextSlot = slot;
+          break;
+        }
+      }
+
+      // Renderizar Clase Actual
+      if (currentSlot) {
+        const profStr = currentSlot.prof ? ` — (${currentSlot.prof})` : '';
+        currentClassEl.innerHTML = `<span><strong>${currentSlot.name}</strong>${profStr}</span> <span>[${currentSlot.start} - ${currentSlot.end}]</span>`;
+      } else if (currentMinutesTotal < 8 * 60 + 30) {
+        currentClassEl.innerHTML = "😴 Las clases aún no han comenzado hoy";
+      } else {
+        currentClassEl.innerHTML = "🎉 Clases finalizadas por hoy";
+      }
+
+      // Renderizar Próxima Clase
+      if (nextSlot) {
+        const profStr = nextSlot.prof ? ` — (${nextSlot.prof})` : '';
+        nextClassEl.innerHTML = `<span><strong>${nextSlot.name}</strong>${profStr}</span> <span>[${nextSlot.start} - ${nextSlot.end}]</span>`;
+      } else if (currentSlot && !nextSlot) {
+        nextClassEl.innerHTML = "🏁 ¡Última clase de la jornada!";
+      } else if (currentMinutesTotal >= 14 * 60 + 30) {
+        nextClassEl.innerHTML = "📅 Mañana a las 08:30";
+      }
+    }
+
+    // Actualización inicial e intervalo
+    updateLiveStatus();
+    setInterval(updateLiveStatus, 1000);
+  </script>
+</body>
+</html>
